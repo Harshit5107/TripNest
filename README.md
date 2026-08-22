@@ -240,4 +240,5 @@ The project is pre-configured with `vercel.json` for instant deployment on **Ver
 
 Built for Odoo Hackathon 2026. All rights reserved.
 #   T r i p N e s t  
+ #   T r i p N e s t  
  
