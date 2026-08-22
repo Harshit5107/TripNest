@@ -1,244 +1,856 @@
-# 🌍 GlobeTrotter – 3D Personalized Travel Planning Platform
+# 🌍 GlobeTrotter — 3D Personalized Travel Planning Platform
 
-> **Hackathon Edition**: Built for **Odoo Hackathon 2026**. 
-> An end-to-end, personalized travel planning platform featuring a **MySQL relational database**, **Node.js/Express REST API**, **React 18 + Vite**, and **Three.js Photorealistic 3D Earth Globe**.
+> **Hackathon Edition:** Built for **Odoo Hackathon 2026**
 
----
+GlobeTrotter is an end-to-end, personalized travel planning platform that helps users **discover destinations, build multi-city itineraries, manage activities, track budgets, visualize journeys, and share trips** from a single application.
 
-## 📌 Project Overview
-
-**GlobeTrotter** empowers travelers to dream, design, and organize multi-city global journeys with ease. It features real-time itinerary building, automated financial budget analytics, interactive day-by-day calendar timelines, public trip sharing, dynamic city search for **ANY** city in the world, and an **AI Trip Assistant** that auto-generates trips on demand.
+The platform combines a **MySQL relational database**, **Node.js/Express REST API**, **React 18 + Vite**, and an interactive **Three.js/WebGL 3D Earth Globe**.
 
 ---
 
-## 🛠️ Tech Stack & Database Used
+## ✨ Why GlobeTrotter?
 
-| Component | Technology Used | Description |
+Planning a multi-city trip often requires switching between multiple applications for destinations, activities, dates, budgets, maps, and itinerary management.
+
+**GlobeTrotter brings these workflows together in one platform.**
+
+### Our vision
+
+> **Dream → Discover → Plan → Budget → Explore → Share**
+
+The goal is to make travel planning simple, visual, personalized, and collaborative.
+
+---
+
+## 🚀 Key Highlights
+
+- 🌍 Interactive **3D Earth Globe**
+- 🤖 **AI Trip Assistant** for automated itinerary generation
+- 🗺️ Multi-city itinerary planning
+- 📅 Day-by-day itinerary and calendar timeline
+- 🔎 City and activity discovery
+- 💰 Automated trip budget calculations
+- 📊 Interactive financial analytics
+- 💱 Multi-currency conversion
+- 🎒 Smart packing-list generation
+- 🔗 Public trip sharing
+- 📋 Copy shared trips into your own account
+- ❤️ Favorite destinations
+- 👤 User profiles and travel personas
+- 🔐 JWT authentication
+- 🛠️ Admin analytics dashboard
+- 📱 Responsive UI for desktop and mobile
+
+---
+
+# 🛠️ Technology Stack
+
+| Layer | Technology | Purpose |
 |---|---|---|
-| **Database** | **MySQL 8.0** (`mysql2/promise`) | Relational database storing users, cities, activities, trips, stops, schedule matrix, & favorites. |
-| **Backend** | **Node.js & Express.js** | RESTful API handling authentication, CRUD operations, budget calculations, and AI trip generation. |
-| **Frontend** | **React 18 & Vite** | Modern, fast UI rendering with state management via React Context. |
-| **3D Engine** | **Three.js & WebGL** | Photorealistic rotatable 3D Earth Globe with cloud atmosphere, glowing city pins, and animated flight arcs. |
-| **Styling** | **Tailwind CSS & Glassmorphism** | Dark/Luxe cyber aesthetic with responsive glassmorphism containers and spring animations. |
-| **Charts** | **Recharts** | Financial budget visualization via interactive Pie/Donut & Bar charts. |
+| Frontend | React 18 | Component-based UI |
+| Build Tool | Vite | Fast development and production builds |
+| Styling | Tailwind CSS | Responsive styling |
+| UI Design | Glassmorphism | Dark/luxe visual experience |
+| 3D | Three.js + WebGL | Interactive Earth Globe |
+| Backend | Node.js | Server-side runtime |
+| API | Express.js | RESTful API |
+| Database | MySQL 8.0 | Relational data storage |
+| DB Driver | mysql2/promise | MySQL connectivity |
+| Charts | Recharts | Budget and analytics visualization |
+| Authentication | JWT | User authentication |
+| State Management | React Context | Application state |
+| Deployment | Vercel | Application deployment |
 
 ---
 
-## 🗄️ MySQL Database Schema (`globetrotter`)
+# 🏗️ System Architecture
 
-The backend utilizes a normalized **MySQL relational database schema**:
-
-```sql
-CREATE DATABASE globetrotter;
-USE globetrotter;
-
--- 1. Users (Auth, Roles, & Personas)
-CREATE TABLE users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  email VARCHAR(150) NOT NULL UNIQUE,
-  password VARCHAR(255) NOT NULL,
-  role ENUM('user', 'admin') DEFAULT 'user',
-  avatar VARCHAR(255),
-  bio TEXT,
-  travel_style VARCHAR(100) DEFAULT 'Explorer',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 2. Cities (Destinations Directory - 66+ Pre-Seeded + Dynamic Auto-Creation)
-CREATE TABLE cities (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  country VARCHAR(100) NOT NULL,
-  region VARCHAR(100) NOT NULL,
-  cost_index VARCHAR(10) NOT NULL DEFAULT '$$',
-  avg_cost_per_day DECIMAL(10, 2) NOT NULL DEFAULT 100.00,
-  popularity_rating DECIMAL(3, 2) NOT NULL DEFAULT 4.5,
-  safety_index INT DEFAULT 85,
-  image_url TEXT,
-  description TEXT,
-  latitude DECIMAL(10, 6),
-  longitude DECIMAL(10, 6),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 3. Activities (Experiences, Tours, & Gastronomy)
-CREATE TABLE activities (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  city_id INT NOT NULL,
-  title VARCHAR(150) NOT NULL,
-  category VARCHAR(50) NOT NULL,
-  cost DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-  duration_hours DECIMAL(4, 2) NOT NULL DEFAULT 2.0,
-  rating DECIMAL(3, 2) DEFAULT 4.8,
-  image_url TEXT,
-  description TEXT,
-  FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE CASCADE
-);
-
--- 4. Trips (User Itineraries)
-CREATE TABLE trips (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  title VARCHAR(150) NOT NULL,
-  description TEXT,
-  start_date DATE NOT NULL,
-  end_date DATE NOT NULL,
-  target_budget DECIMAL(10, 2) DEFAULT 1500.00,
-  cover_image TEXT,
-  visibility ENUM('public', 'private') DEFAULT 'private',
-  share_slug VARCHAR(64) UNIQUE,
-  status ENUM('draft', 'upcoming', 'completed') DEFAULT 'upcoming',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- 5. Trip Stops (Ordered Multi-City Route Sequence)
-CREATE TABLE trip_stops (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  trip_id INT NOT NULL,
-  city_id INT NOT NULL,
-  stop_order INT NOT NULL DEFAULT 1,
-  arrival_date DATE,
-  departure_date DATE,
-  stay_cost DECIMAL(10, 2) DEFAULT 0.00,
-  transport_cost DECIMAL(10, 2) DEFAULT 0.00,
-  notes TEXT,
-  FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE,
-  FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE CASCADE
-);
-
--- 6. Stop Activities (Daily Assigned Experiences)
-CREATE TABLE stop_activities (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  stop_id INT NOT NULL,
-  activity_id INT NOT NULL,
-  scheduled_day INT DEFAULT 1,
-  scheduled_time VARCHAR(20) DEFAULT '10:00 AM',
-  cost DECIMAL(10, 2) DEFAULT 0.00,
-  notes TEXT,
-  FOREIGN KEY (stop_id) REFERENCES trip_stops(id) ON DELETE CASCADE,
-  FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE
-);
-
--- 7. User Favorites (Saved Cities)
-CREATE TABLE user_favorites (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  city_id INT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE CASCADE,
-  UNIQUE KEY user_city_fav (user_id, city_id)
-);
+```text
+                    ┌─────────────────────────┐
+                    │       User / Client     │
+                    └────────────┬────────────┘
+                                 │
+                                 ▼
+                    ┌─────────────────────────┐
+                    │ React 18 + Vite         │
+                    │ Tailwind + Three.js     │
+                    │ Recharts + React Context│
+                    └────────────┬────────────┘
+                                 │
+                              REST API
+                                 │
+                                 ▼
+                    ┌─────────────────────────┐
+                    │ Node.js + Express.js    │
+                    │                         │
+                    │ Auth / CRUD / Budget    │
+                    │ AI Trip Generation      │
+                    │ Sharing / Analytics     │
+                    └────────────┬────────────┘
+                                 │
+                            mysql2/promise
+                                 │
+                                 ▼
+                    ┌─────────────────────────┐
+                    │       MySQL 8.0         │
+                    │                         │
+                    │ Users                   │
+                    │ Cities                  │
+                    │ Activities              │
+                    │ Trips                   │
+                    │ Trip Stops              │
+                    │ Stop Activities         │
+                    │ Favorites               │
+                    └─────────────────────────┘
 ```
 
 ---
 
-## 🌟 Key Application Features
+# 🗄️ Database Design
 
-1. **Login & Signup (`AuthModal.jsx`)**:
-   - JWT authentication + ⚡ Quick Demo Login preset buttons.
-2. **Dashboard & 3D Earth Globe (`DashboardView.jsx` & `Globe3D.jsx`)**:
-   - Interactive Three.js Earth with continental textures, atmospheric glow, glowing city pins, and animated flight arcs.
-3. **✨ AI Trip Assistant Generator (`/api/ai/generate-trip`)**:
-   - Auto-generates multi-city trip itineraries based on user prompt, vibe persona, duration, and target budget.
-4. **Create Trip Wizard (`CreateTripModal.jsx`)**:
-   - Form to initiate trip with date ranges, budget target, cover banner picker, and initial cities.
-5. **My Trips List (`MyTripsView.jsx`)**:
-   - Filterable itinerary management (Upcoming, Completed, Draft) with search bar.
-6. **Itinerary Builder (`ItineraryBuilderView.jsx`)**:
-   - Drag/reorder city stops, edit stay/transport costs, and assign activities to specific days.
-7. **Visual Itinerary View (`ItineraryViewScreen.jsx`)**:
-   - Day-by-day timeline view with city headers and activity cost breakdowns.
-8. **City Search for ANY City (`CitySearchScreen.jsx`)**:
-   - Search 66+ seeded global cities OR auto-create **ANY city in the world** with dynamic photo matching!
-9. **Activity Search (`ActivitySearchScreen.jsx`)**:
-   - Filter experiences by category (Sightseeing, Food, Adventure, Nightlife) with price range sliders.
-10. **Financial Dashboard & Currency Converter (`TripBudgetScreen.jsx`)**:
-    - Interactive Pie & Bar charts using Recharts + Live Currency Converter (**USD, EUR, GBP, JPY, INR, AUD, CAD**) + CSV Export.
-11. **🎒 Smart Packing List Generator (`TripBudgetScreen.jsx`)**:
-    - Real-time packing checklist categorized by Essentials, Electronics, Footwear, and Personal gear.
-12. **Trip Calendar Timeline (`TripTimelineScreen.jsx`)**:
-    - 14-day calendar grid displaying multi-day city stops and daily schedule blocks.
-13. **Public Sharing & Copy Trip (`SharedItineraryScreen.jsx`)**:
-    - Sharable public links with a **"Copy Trip to My Account"** cloning button.
-14. **User Profile & Favorites (`UserProfileScreen.jsx`)**:
-    - Avatar selector, travel persona settings, and saved favorite destinations list.
-15. **Admin Analytics Dashboard (`AdminDashboardScreen.jsx`)**:
-    - Platform metrics (Total Users, Active Trips, Top Cities Chart, User Management Table with role toggling).
+GlobeTrotter uses a **normalized MySQL relational database** named `globetrotter`.
+
+The database is designed around relationships between users, trips, cities, stops, and activities.
+
+## Main Tables
+
+### 1. `users`
+
+Stores user authentication, profile, role, and travel-persona information.
+
+Important fields:
+
+- `id`
+- `name`
+- `email`
+- `password`
+- `role`
+- `avatar`
+- `bio`
+- `travel_style`
 
 ---
 
-## 🔑 Demo Account Credentials
+### 2. `cities`
 
-| Role | Email | Password |
-|---|---|---|
-| **Platform Administrator** | `hbhalani937@gmail.com` | `Kano@5107` |
-| **Admin Manager (Secondary)** | `admin@globetrotter.com` | `password123` |
-| **Demo Traveler** | `alex@globetrotter.com` | `password123` |
+Stores destination information.
+
+Important fields:
+
+- `name`
+- `country`
+- `region`
+- `cost_index`
+- `avg_cost_per_day`
+- `popularity_rating`
+- `safety_index`
+- `latitude`
+- `longitude`
+
+The platform includes pre-seeded global cities and supports dynamic city creation.
 
 ---
 
-## 💻 Local Setup & Execution Instructions
+### 3. `activities`
 
-### Prerequisites
-- Node.js (v18+)
-- MySQL Server (v8.0+ or XAMPP MySQL)
+Stores experiences associated with a city.
 
-### Step 1: Install Dependencies
+Examples:
+
+- Sightseeing
+- Food
+- Adventure
+- Nightlife
+
+Each activity belongs to a city through:
+
+```text
+activities.city_id → cities.id
+```
+
+---
+
+### 4. `trips`
+
+Stores user-created itineraries.
+
+Each trip belongs to a user:
+
+```text
+trips.user_id → users.id
+```
+
+Trips contain:
+
+- title
+- description
+- start date
+- end date
+- target budget
+- visibility
+- status
+- share slug
+
+---
+
+### 5. `trip_stops`
+
+Represents the cities included in a particular trip.
+
+This table allows one trip to contain multiple cities while maintaining their order.
+
+```text
+trips
+  │
+  └── trip_stops
+        │
+        └── cities
+```
+
+It also stores:
+
+- arrival date
+- departure date
+- stay cost
+- transport cost
+- stop order
+
+---
+
+### 6. `stop_activities`
+
+Connects activities to specific trip stops.
+
+It stores:
+
+- scheduled day
+- scheduled time
+- activity cost
+- notes
+
+This allows the application to build detailed day-by-day itineraries.
+
+---
+
+### 7. `user_favorites`
+
+Stores destinations saved by users.
+
+A unique constraint prevents the same user from saving the same city multiple times.
+
+```text
+UNIQUE(user_id, city_id)
+```
+
+---
+
+# 🔗 Database Relationships
+
+```text
+Users
+  │
+  └──────────────< Trips
+                     │
+                     └──────────────< Trip Stops >──────────── Cities
+                                           │
+                                           │
+                                           └──────< Stop Activities >──── Activities
+                                                                                 │
+                                                                                 └── Cities
+
+Users
+  │
+  └──────────────< User Favorites >──────────── Cities
+```
+
+### Why MySQL?
+
+MySQL was selected because GlobeTrotter contains highly structured and interconnected data.
+
+For example:
+
+- One user can create many trips.
+- One trip can contain many cities.
+- One city can contain many activities.
+- One stop can contain multiple scheduled activities.
+- Users can save multiple favorite cities.
+
+Using **primary keys, foreign keys, unique constraints, and cascading relationships** helps maintain data integrity and makes complex travel data easier to query and manage.
+
+---
+
+# 🌟 Application Features
+
+## 1. 🔐 Login & Signup
+
+Users can create accounts and securely access their personal travel data.
+
+Features:
+
+- Email/password authentication
+- JWT authentication
+- Basic validation
+- Forgot-password flow
+- Quick demo login
+
+---
+
+## 2. 🌍 Interactive 3D Earth
+
+The dashboard features a photorealistic interactive Earth built using:
+
+- Three.js
+- WebGL
+- Globe textures
+- Atmospheric effects
+- City markers
+- Animated flight arcs
+
+Users can rotate and explore the globe interactively.
+
+---
+
+## 3. 🤖 AI Trip Assistant
+
+The AI Trip Assistant can generate a multi-city itinerary based on:
+
+- User prompt
+- Travel persona/vibe
+- Trip duration
+- Target budget
+- Destination preferences
+
+This converts a simple travel request into a structured trip plan.
+
+---
+
+## 4. ✈️ Create Trip Wizard
+
+Users can create a trip by entering:
+
+- Trip name
+- Start date
+- End date
+- Description
+- Target budget
+- Cover image
+- Initial destinations
+
+---
+
+## 5. 🧳 My Trips
+
+Users can manage their trips through categories such as:
+
+- Upcoming
+- Completed
+- Draft
+
+Each trip can be viewed, edited, searched, or deleted.
+
+---
+
+## 6. 🗺️ Itinerary Builder
+
+The itinerary builder allows users to:
+
+- Add cities
+- Reorder stops
+- Set arrival/departure dates
+- Add activities
+- Assign activities to days
+- Set transportation costs
+- Set stay costs
+- Add notes
+
+---
+
+## 7. 📅 Visual Itinerary
+
+The completed itinerary can be viewed as a day-by-day timeline.
+
+Each day displays:
+
+- City
+- Activities
+- Time
+- Duration
+- Activity cost
+- Daily schedule
+
+---
+
+## 8. 🔎 City Search
+
+Users can search for global destinations.
+
+The platform provides information such as:
+
+- Country
+- Region
+- Cost index
+- Popularity
+- Safety
+- Average daily cost
+- Location
+
+The system supports pre-seeded cities and dynamic city creation.
+
+---
+
+## 9. 🎯 Activity Search
+
+Activities can be filtered by:
+
+- Category
+- Cost
+- Duration
+- Rating
+
+Categories include:
+
+- Sightseeing
+- Food
+- Adventure
+- Nightlife
+
+---
+
+## 10. 💰 Financial Dashboard
+
+The budget dashboard provides:
+
+- Target budget
+- Estimated expenses
+- Stay costs
+- Transportation costs
+- Activity costs
+- Expense breakdown
+- Interactive charts
+
+Recharts is used to visualize financial information through Pie/Donut and Bar charts.
+
+---
+
+## 11. 💱 Currency Converter
+
+The application supports multiple currencies, including:
+
+- USD
+- EUR
+- GBP
+- JPY
+- INR
+- AUD
+- CAD
+
+---
+
+## 12. 🎒 Smart Packing List
+
+GlobeTrotter generates a categorized packing checklist.
+
+Categories include:
+
+- Essentials
+- Electronics
+- Footwear
+- Personal gear
+
+---
+
+## 13. 🔗 Public Trip Sharing
+
+Users can make trips public and share them using a generated share link.
+
+Other users can view the shared itinerary.
+
+A **Copy Trip to My Account** feature allows users to clone a shared trip into their own account.
+
+---
+
+## 14. ❤️ Favorites
+
+Users can save favorite cities and access them later from their profile.
+
+---
+
+## 15. 👤 User Profile
+
+Users can manage:
+
+- Avatar
+- Bio
+- Travel style/persona
+- Favorite destinations
+
+---
+
+## 16. 📊 Admin Dashboard
+
+Administrators can view platform-level analytics such as:
+
+- Total users
+- Active trips
+- Popular cities
+- User management
+- User roles
+
+---
+
+# 🔐 Authentication & Authorization
+
+GlobeTrotter uses **JWT-based authentication**.
+
+The general authentication flow is:
+
+```text
+User Login
+    ↓
+Express Authentication API
+    ↓
+Credentials Validation
+    ↓
+JWT Token Generated
+    ↓
+Frontend Stores Authentication State
+    ↓
+Protected API Requests
+    ↓
+Backend Validates JWT
+```
+
+The system also supports different user roles, including:
+
+- `user`
+- `admin`
+
+---
+
+# 📂 Suggested Project Structure
+
+```text
+GlobeTrotter/
+│
+├── src/
+│   ├── components/
+│   ├── views/
+│   ├── context/
+│   ├── services/
+│   └── ...
+│
+├── server/
+│   ├── routes/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── db/
+│   └── ...
+│
+├── public/
+│
+├── package.json
+├── vite.config.js
+├── vercel.json
+├── .env
+└── README.md
+```
+
+> The exact folder structure may vary depending on the implementation.
+
+---
+
+# ⚙️ Installation & Setup
+
+## Prerequisites
+
+Make sure the following are installed:
+
+- **Node.js 18+**
+- **MySQL 8.0+**
+- npm
+- Git
+
+Alternatively, MySQL can be run using **XAMPP**.
+
+---
+
+## 1. Clone the Repository
+
+```bash
+git clone <YOUR_GITHUB_REPOSITORY_URL>
+cd GlobeTrotter
+```
+
+---
+
+## 2. Install Dependencies
+
 ```bash
 npm install
 ```
 
-### Step 2: Initialize MySQL Database
-Make sure MySQL is running on `127.0.0.1:3306` (`root` user without password, or set `.env` variables), then execute:
+---
+
+## 3. Configure Environment Variables
+
+Create a `.env` file in the project root.
+
+Example:
+
+```env
+DB_HOST=127.0.0.1
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=globetrotter
+DB_PORT=3306
+
+JWT_SECRET=replace_with_a_strong_secret
+```
+
+> Never commit your real `.env` file or production credentials to GitHub.
+
+---
+
+## 4. Start MySQL
+
+Make sure MySQL is running on:
+
+```text
+127.0.0.1:3306
+```
+
+---
+
+## 5. Initialize the Database
+
+Run:
+
 ```bash
 npm run init-db
 ```
 
-### Step 3: Run Fullstack Application
+This creates and initializes the `globetrotter` database.
+
+---
+
+## 6. Start the Application
+
 ```bash
-# Run Express backend server & Vite React frontend concurrently
 npm run dev
 ```
 
-- **Frontend**: [http://localhost:3000](http://localhost:3000)
-- **Backend API**: [http://localhost:5000/api/health](http://localhost:5000/api/health)
+The application will start the frontend and backend development servers.
+
+### Frontend
+
+```text
+http://localhost:3000
+```
+
+### Backend Health Check
+
+```text
+http://localhost:5000/api/health
+```
 
 ---
 
-## 🚀 How to Deploy on Vercel
+# 🔌 API Overview
 
-The project is pre-configured with `vercel.json` for instant deployment on **Vercel**!
+The Express backend exposes REST APIs for major application operations.
 
-### Method 1: Using Vercel CLI (Recommended)
-1. Install Vercel CLI:
-   ```bash
-   npm i -g vercel
-   ```
-2. Deploy to Vercel:
-   ```bash
-   vercel
-   ```
+Example API areas:
 
-### Method 2: Deploying via GitHub & Vercel Dashboard
-1. Push this codebase repository to **GitHub**.
-2. Log into [Vercel Dashboard](https://vercel.com).
-3. Click **"New Project"** -> Import your GitHub repository.
-4. Set Environment Variables on Vercel:
-   - `DB_HOST`: Your hosted MySQL Database host (e.g. PlanetScale, Supabase MySQL, Railway, or Aiven MySQL)
-   - `DB_USER`: Your MySQL username
-   - `DB_PASSWORD`: Your MySQL password
-   - `DB_NAME`: `globetrotter`
-   - `JWT_SECRET`: `globetrotter_super_secret_key_2026`
-5. Click **Deploy**! Vercel will automatically build the Vite React frontend and deploy the Node/Express backend handlers.
+```text
+/api/auth
+/api/trips
+/api/cities
+/api/activities
+/api/favorites
+/api/ai/generate-trip
+/api/admin
+/api/health
+```
+
+The exact endpoints may vary based on the implementation.
 
 ---
 
-## 📄 License
+# 🧠 AI Trip Generation Flow
 
-Built for Odoo Hackathon 2026. All rights reserved.
-#   T r i p N e s t  
- #   T r i p N e s t  
- 
+```text
+User Prompt
+    ↓
+Travel Preferences
+    ↓
+Duration + Budget
+    ↓
+AI Trip Assistant
+    ↓
+Destination Selection
+    ↓
+Activity Selection
+    ↓
+Itinerary Generation
+    ↓
+Budget Estimation
+    ↓
+MySQL Persistence
+    ↓
+Editable Trip
+```
+
+The important part is that AI-generated output becomes **structured application data**, rather than remaining only as plain text.
+
+---
+
+# 💰 Budget Calculation
+
+The estimated trip cost can be represented as:
+
+```text
+Total Trip Cost
+=
+Stay Cost
++ Transportation Cost
++ Activity Costs
++ Other Planned Expenses
+```
+
+The resulting data is displayed through interactive charts and budget summaries.
+
+---
+
+# 🌐 Deployment
+
+The application is prepared for deployment using **Vercel**.
+
+## Option 1 — Vercel CLI
+
+Install the CLI:
+
+```bash
+npm install -g vercel
+```
+
+Then:
+
+```bash
+vercel
+```
+
+---
+
+## Option 2 — GitHub + Vercel
+
+1. Push the repository to GitHub.
+2. Open Vercel.
+3. Import the GitHub repository.
+4. Configure the required environment variables.
+5. Deploy the application.
+
+Example production variables:
+
+```env
+DB_HOST=<HOSTED_MYSQL_HOST>
+DB_USER=<MYSQL_USER>
+DB_PASSWORD=<MYSQL_PASSWORD>
+DB_NAME=globetrotter
+DB_PORT=3306
+JWT_SECRET=<STRONG_RANDOM_SECRET>
+```
+
+### Important
+
+Vercel deployment requires a **production-accessible MySQL-compatible database**. A local MySQL instance running on `127.0.0.1` cannot be accessed by the deployed application.
+
+---
+
+# 🔒 Security Notes
+
+For security reasons:
+
+- Do not commit `.env` files.
+- Do not expose production database credentials.
+- Do not expose real administrator passwords in public repositories.
+- Use a strong random `JWT_SECRET`.
+- Hash passwords before storing them in production.
+- Restrict admin APIs using role-based authorization.
+- Use HTTPS in production.
+
+Add this to `.gitignore`:
+
+```gitignore
+node_modules/
+.env
+.env.local
+dist/
+```
+
+---
+
+# 🎯 Hackathon Value Proposition
+
+GlobeTrotter addresses several real travel-planning problems in a single platform:
+
+| Problem | GlobeTrotter Solution |
+|---|---|
+| Complex multi-city planning | Interactive itinerary builder |
+| Finding destinations | City search + 3D globe |
+| Finding activities | Activity search and filtering |
+| Budget uncertainty | Automatic cost calculation |
+| Difficult schedule management | Calendar and timeline |
+| Repetitive trip planning | AI Trip Assistant |
+| Sharing itineraries | Public share links |
+| Reusing other trips | Copy Trip feature |
+| Managing saved destinations | Favorites |
+| Lack of visual engagement | Three.js 3D Earth |
+
+---
+
+# 🏆 What Makes GlobeTrotter Different?
+
+GlobeTrotter is not simply a travel-search application.
+
+It combines:
+
+> **AI + 3D Visualization + Relational Data + Itinerary Management + Budget Analytics + Social Sharing**
+
+into one travel-planning ecosystem.
+
+The **MySQL relational model** provides a strong foundation for connecting users, trips, destinations, activities, schedules, and favorites, while the React frontend provides an interactive experience on top of that data.
+
+---
+
+# 🔮 Future Enhancements
+
+Potential future improvements include:
+
+- ✈️ Live flight and hotel APIs
+- 🏨 Real-time accommodation availability
+- 🗺️ Interactive route optimization
+- 🚆 Transport recommendations
+- 🌦️ Weather-aware itinerary planning
+- 🤖 More advanced AI personalization
+- 👥 Real-time collaborative trip planning
+- 🔔 Travel reminders and notifications
+- 📍 GPS-based trip tracking
+- 💳 Real-time booking integration
+- 🌐 Offline itinerary access
+- 📱 Dedicated mobile application
+
+---
+
+# 👥 Team
+
+**GlobeTrotter — Odoo Hackathon 2026**
+
+Built with ❤️ for smarter and more personalized travel planning.
+
+---
+
+# 📜 License
+
+This project was built for **Odoo Hackathon 2026**.
+
+All rights reserved.
