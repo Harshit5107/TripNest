@@ -8,6 +8,24 @@ The platform combines a **MySQL relational database**, **Node.js/Express REST AP
 
 ---
 
+# 🌍 GlobeTrotter — 3D Personalized Travel Planning Platform
+
+> **🚀 Live Website:** [Visit GlobeTrotter](https://trip-nest-git-main-harshit5107s-projects.vercel.app/)
+
+> **🏆 Hackathon Edition:** Built for **Odoo Hackathon 2026**
+
+An end-to-end, personalized travel planning platform featuring a **MySQL relational database**, **Node.js/Express REST API**, **React 18 + Vite**, and **Three.js Photorealistic 3D Earth Globe**.
+
+---
+
+## 🚀 Live Demo
+
+[![Live Demo](https://img.shields.io/badge/🌍%20Live%20Demo-GlobeTrotter-success?style=for-the-badge)](https://trip-nest-git-main-harshit5107s-projects.vercel.app/)
+
+**👉 [Open GlobeTrotter Live Website](https://trip-nest-git-main-harshit5107s-projects.vercel.app/)**
+
+---
+
 ## ✨ Why GlobeTrotter?
 
 Planning a multi-city trip often requires switching between multiple applications for destinations, activities, dates, budgets, maps, and itinerary management.
