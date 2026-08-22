@@ -14,7 +14,14 @@ async function initDB() {
   console.log('🚀 Connecting to MySQL server...');
   let connection;
   try {
-    connection = await mysql.createConnection(DB_CONFIG);
+    try {
+      connection = await mysql.createConnection(DB_CONFIG);
+    } catch (cErr) {
+      console.log('⚠️ Connection refused. Auto-starting mysqld daemon...');
+      const { exec } = require('child_process');
+      await new Promise(r => exec(`powershell -Command "Start-Process -FilePath 'C:\\xampp\\mysql\\bin\\mysqld.exe' -ArgumentList '--defaults-file=C:\\xampp\\mysql\\bin\\my.ini' -WindowStyle Hidden"`, () => setTimeout(r, 2000)));
+      connection = await mysql.createConnection(DB_CONFIG);
+    }
     console.log('✅ Connected to MySQL.');
 
     // Execute schema creation
